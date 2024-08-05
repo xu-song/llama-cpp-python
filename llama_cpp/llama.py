@@ -778,8 +778,10 @@ class Llama:
                     break
             if longest_prefix > 0:
                 if self.verbose:
-                    print("Llama.generate: prefix-match hit", file=sys.stderr)
+                    print(f"Llama.generate: {longest_prefix} prefix-match hit, remains {len(tokens)-longest_prefix} to forward", file=sys.stderr)
                 reset = False
+                if len(tokens)-longest_prefix > 10:
+                    print("Maybe a new session", json.dumps({"tokens": tokens, "input_ids": self._input_ids.tolist()}))
                 tokens = tokens[longest_prefix:]
                 self.n_tokens = longest_prefix
 
@@ -1344,6 +1346,8 @@ class Llama:
                                         prev_tokens=prompt_tokens
                                         + completion_tokens[:returned_tokens],
                                     ).decode("utf-8", errors="ignore"),
+                                    "completion_text": all_text.decode("utf-8", errors="ignore"),
+                                    "completion_tokens": completion_tokens,
                                     "index": 0,
                                     "logprobs": logprobs_or_none,
                                     "finish_reason": None,
@@ -1386,6 +1390,8 @@ class Llama:
                             "choices": [
                                 {
                                     "text": ts,
+                                    "completion_text": all_text.decode("utf-8", errors="ignore"),
+                                    "completion_tokens": completion_tokens,
                                     "index": 0,
                                     "logprobs": None,
                                     "finish_reason": None,
@@ -1480,6 +1486,8 @@ class Llama:
                                 "text": last_text[
                                     : len(last_text) - (token_end_position - end)
                                 ].decode("utf-8", errors="ignore"),
+                                "completion_text": all_text.decode("utf-8", errors="ignore"),
+                                "completion_tokens": completion_tokens,
                                 "index": 0,
                                 "logprobs": logprobs_or_none,
                                 "finish_reason": None,
@@ -1498,6 +1506,8 @@ class Llama:
                             "text": self.detokenize([token]).decode(
                                 "utf-8", errors="ignore"
                             ),
+                            "completion_text": all_text.decode("utf-8", errors="ignore"),
+                            "completion_tokens": completion_tokens,
                             "index": 0,
                             "logprobs": logprobs_or_none,
                             "finish_reason": None,
