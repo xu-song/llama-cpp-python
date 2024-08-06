@@ -778,11 +778,15 @@ class Llama:
                     break
             if longest_prefix > 0:
                 if self.verbose:
-                    print(f"Llama.generate: {longest_prefix} prefix-match hit, remains {len(tokens)-longest_prefix} to forward", file=sys.stderr)
+                    print(f"Llama.generate: {longest_prefix} prefix-match hit, "
+                          f"remains {len(tokens)-longest_prefix} prompt tokens to eval", file=sys.stderr)
                 reset = False
-                if len(tokens)-longest_prefix > 10:
-                    print("Maybe a new session", json.dumps({"tokens": tokens, "input_ids": self._input_ids.tolist()}))
                 tokens = tokens[longest_prefix:]
+                if len(tokens) > 0:
+                    print("Maybe a new session", json.dumps(
+                        {"content": self.detokenize(tokens).decode('utf-8'),
+                         "tokens": tokens,
+                         "input_ids": self._input_ids.tolist()}))
                 self.n_tokens = longest_prefix
 
         # Reset the model state
@@ -1225,15 +1229,17 @@ class Llama:
             grammar=grammar,
         ):
             assert self._model.model is not None
+
+            # 返回的文本，不应该包含EOG。因为
+            # 返回的tokens需要包含EOG和stop_tokens。因为1是用于kv-cache，2是返回后方便拼接
+            completion_tokens.append(token)
+
             if llama_cpp.llama_token_is_eog(self._model.model, token):
-                text = self.detokenize(completion_tokens, prev_tokens=prompt_tokens)
+                text = self.detokenize(completion_tokens[:-1], prev_tokens=prompt_tokens)
                 finish_reason = "stop"
                 break
 
-            completion_tokens.append(token)
-
             all_text = self.detokenize(completion_tokens, prev_tokens=prompt_tokens)
-
             # Contains multi-byte UTF8
             for k, char in enumerate(all_text[-3:]):
                 k = 3 - k
