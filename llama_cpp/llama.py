@@ -1415,17 +1415,17 @@ class Llama:
 
         if stream:
             remaining_tokens = completion_tokens[returned_tokens:]
-            all_text = self.detokenize(
+            remaining_text = self.detokenize(
                 remaining_tokens,
                 prev_tokens=prompt_tokens + completion_tokens[:returned_tokens],
             )
-            any_stop = [s for s in stop_sequences if s in all_text]
+            any_stop = [s for s in stop_sequences if s in remaining_text]
             if len(any_stop) > 0:
-                end = min(all_text.index(stop) for stop in any_stop)
+                end = min(remaining_text.index(stop) for stop in any_stop)
             else:
-                end = len(all_text)
+                end = len(remaining_text)
 
-            token_end_position = 0
+            token_end_position = 0         # 这里有问题：
             for token in remaining_tokens:
                 token_end_position += len(
                     self.detokenize(
@@ -1486,7 +1486,7 @@ class Llama:
                                 "text": last_text[
                                     : len(last_text) - (token_end_position - end)
                                 ].decode("utf-8", errors="ignore"),
-                                "completion_text": all_text.decode("utf-8", errors="ignore"),
+                                "completion_text": text.decode("utf-8", errors="ignore"),
                                 "completion_tokens": completion_tokens,
                                 "index": 0,
                                 "logprobs": logprobs_or_none,
@@ -1506,7 +1506,7 @@ class Llama:
                             "text": self.detokenize([token]).decode(
                                 "utf-8", errors="ignore"
                             ),
-                            "completion_text": all_text.decode("utf-8", errors="ignore"),
+                            "completion_text": text.decode("utf-8", errors="ignore"),
                             "completion_tokens": completion_tokens,
                             "index": 0,
                             "logprobs": logprobs_or_none,
