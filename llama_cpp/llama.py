@@ -786,7 +786,7 @@ class Llama:
                     print("Maybe a new session", json.dumps(
                         {"content": self.detokenize(tokens).decode('utf-8'),
                          "tokens": tokens,
-                         "input_ids": self._input_ids.tolist()}))
+                         "input_ids": self._input_ids.tolist()}, ensure_ascii=False))
                 self.n_tokens = longest_prefix
 
         # Reset the model state
